@@ -15,6 +15,7 @@ u3t-gui is a GUI version of micro Tic-Tac-Toe game (or called Unbeatable Tic-Tac
 ## Requirement
 
 1. wxWidgets Stable Release 3.2.3 from <http://wxwidgets.org/downloads/>
+2. MSYS2 <https://www.msys2.org>
 
 Try it if you can!
 
