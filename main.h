@@ -39,7 +39,8 @@ struct Game : public ox_game {
     inline ox_gameid gameplay(const ox_player* p1, ox_player* p2, unsigned int val);
 };
 
-static_assert(std::is_standard_layout<Game>(), "struct Game is not a trivially copyable struct");
+static_assert(std::is_trivially_constructible<ox_game>() && std::is_standard_layout<ox_game>(), "struct ox_game is not a trivially constructible struct && POD");
+static_assert(std::is_standard_layout<Game>(), "struct Game is not a POD");
 static_assert(sizeof(Game) == sizeof(ox_game), "Game != ox_game");
 
 struct Ai {
