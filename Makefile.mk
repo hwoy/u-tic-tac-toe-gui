@@ -67,5 +67,5 @@ clean:
 	$(RM) *.ic *.o  *~ *.log *.exe
 
 distclean:
-	make clean && $(RM) $(BIN_PVP) $(BIN_PVE) && make -C $(BIN_DIR) clean
+	make clean ; $(RM) $(BIN_PVP) $(BIN_PVE) ; make -C $(BIN_DIR) clean
 
