@@ -1,0 +1,3 @@
+[submodule "u-tic-tac-toe"]
+	path = u-tic-tac-toe
+	url = https://github.com/hwoy/u-tic-tac-toe.git
