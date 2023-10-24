@@ -8,9 +8,12 @@ u3t-gui is a GUI version of micro Tic-Tac-Toe game (or called Unbeatable Tic-Tac
 
 1. Full open source.
 2. Cross platform ability.
-3. 100% of C99(long long in RNG lib) compatible for game core and 100% of ISO C++17(```cpp std::optional<T> ```) C++14(Generic lambda) for front-end GUI.
-4. Unbeatable AI.
-5. Cool wxWidgets GUI.
+3. 100% of C99(long long in RNG lib) compatible for game core and 100% of ISO C++17(
+4. ```cpp
+5. std::optional<T> ```
+6.  ) C++14(Generic lambda) for front-end GUI.
+7. Unbeatable AI.
+8. Cool wxWidgets GUI.
 
 ## Requirement
 
