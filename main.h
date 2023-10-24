@@ -1,8 +1,10 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+namespace ffi {
 extern "C" {
 #include "ttt.h"
+}
 }
 
 #include <algorithm>
@@ -28,23 +30,23 @@ class TTTFrame;
 
 using buttonMap_t = std::map<int, TTTButtom*>;
 
-struct Player : public ox_player {
+struct Player : public ffi::ox_player {
     const wxColor color;
     inline Player(const wxColor& color);
 };
 
-struct Game : public ox_game {
+struct Game : public ffi::ox_game {
     Game(
         unsigned int seed = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count());
-    inline ox_gameid gameplay(const ox_player* p1, ox_player* p2, unsigned int val);
+    inline ffi::ox_gameid gameplay(const ffi::ox_player* p1, ffi::ox_player* p2, unsigned int val) const;
 };
 
-static_assert(std::is_trivially_constructible<ox_game>() && std::is_standard_layout<ox_game>(), "struct ox_game is not a trivially constructible struct && POD");
-static_assert(std::is_standard_layout<Game>(), "struct Game is not a POD");
-static_assert(sizeof(Game) == sizeof(ox_game), "Game != ox_game");
+static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
+static_assert(std::is_standard_layout<Game>(), "struct Game is not a standard layout");
+static_assert(sizeof(Game) == sizeof(ffi::ox_game), "Game != ffi::ox_game");
 
 struct Ai {
-    inline static int ai(ox_game* game, const ox_player* p1, const ox_player* p2);
+    inline static int ai(Game& game, const Player& p1, const Player& p2);
 };
 
 class TTTButtom : public wxButton {
@@ -58,7 +60,6 @@ public:
 class TTTFrame : public wxFrame {
 public:
     TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
-    inline const buttonMap_t& getmapButton() const;
 
 protected:
     virtual void OnNewGame(wxCommandEvent& event);
@@ -109,18 +110,18 @@ inline Player::Player(const wxColor& color)
 }
 
 Game::Game(unsigned int seed)
-    : ox_game(ox_creatgame(seed))
+    : ffi::ox_game(ffi::ox_creatgame(seed))
 {
 }
 
-inline ox_gameid Game::gameplay(const ox_player* p1, ox_player* p2, unsigned int val)
+inline ffi::ox_gameid Game::gameplay(const ffi::ox_player* p1, ffi::ox_player* p2, unsigned int val) const
 {
-    return ox_gameplay(this, p1, p2, val);
+    return ffi::ox_gameplay(this, p1, p2, val);
 }
 
-inline int Ai::ai(ox_game* game, const ox_player* p1, const ox_player* p2)
+inline int Ai::ai(Game& game, const Player& p1, const Player& p2)
 {
-    return ox_ai(game, p1, p2);
+    return ffi::ox_ai(&game, &p1, &p2);
 }
 
 inline TTTButtom::TTTButtom(wxWindow* parent, wxWindowID id, const wxSize& size, int val, const wxColor defaultButtonColor)
@@ -217,9 +218,9 @@ Player* TTTFrame::newgame(Player* wf)
         buttonPair.second->Enable();
     }
 
-    ox_init(&game, WINLIST, TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
+    ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
 
-    currentPlayer = (!wf) ? (ox_random(&game, 0, 1) ? &p1 : &p2) : wf;
+    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? &p1 : &p2) : wf;
     indexButton->SetBackgroundColour(currentPlayer->color);
 
     return currentPlayer;
@@ -250,7 +251,7 @@ void TTTFrame::OnP2First(wxCommandEvent& event)
 void TTTFrame::OnHint(wxCommandEvent& event)
 {
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    const auto pHint = Ai::ai(&game, rival, currentPlayer);
+    const auto pHint = ffi::ox_ai(&game, rival, currentPlayer);
 
     TTTButtom* hintButton = std::find_if(mapButton.begin(), mapButton.end(),
         [pHint](const auto& buttonPair) {
@@ -275,11 +276,6 @@ wxSize TTTFrame::sqindexSize() const
     const auto sq = std::min(GetClientSize().GetWidth(), GetClientSize().GetHeight()) / 8;
 
     return wxSize(sq, sq);
-}
-
-inline const buttonMap_t& TTTFrame::getmapButton() const
-{
-    return mapButton;
 }
 
 template <typename F>

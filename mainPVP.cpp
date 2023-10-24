@@ -23,16 +23,16 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
 
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
     switch (const auto gameid = game.gameplay(rival, currentPlayer, selectedButton->val)) {
-    case ox_idoutofrange:
-    case ox_idvalueexist:
+    case ffi::ox_idoutofrange:
+    case ffi::ox_idvalueexist:
         return;
-    case ox_idgame:
-    case ox_idwin:
-    case ox_iddraw:
+    case ffi::ox_idgame:
+    case ffi::ox_idwin:
+    case ffi::ox_iddraw:
         selectedButton->SetBackgroundColour(currentPlayer->color);
         selectedButton->Disable();
-        if (gameid == ox_idwin || gameid == ox_iddraw) {
-            wxMessageBox(gameid == ox_idwin ? (currentPlayer == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+        if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
+            wxMessageBox(gameid == ffi::ox_idwin ? (currentPlayer == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
             newgame(rival);
             return;
         }

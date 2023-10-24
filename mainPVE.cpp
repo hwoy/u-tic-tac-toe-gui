@@ -40,13 +40,13 @@ int TTT_pve_Frame::__OnButton__(TTTButtom* selectedButton)
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
     const auto gameid = game.gameplay(rival, currentPlayer, selectedButton->val);
     switch (gameid) {
-    case ox_idgame:
-    case ox_idwin:
-    case ox_iddraw:
+    case ffi::ox_idgame:
+    case ffi::ox_idwin:
+    case ffi::ox_iddraw:
         selectedButton->SetBackgroundColour(currentPlayer->color);
         selectedButton->Disable();
-        if (gameid == ox_idwin || gameid == ox_iddraw) {
-            wxMessageBox(gameid == ox_idwin ? (currentPlayer == &p1 ? "P1(Com) wins" : "P2(You) win") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+        if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
+            wxMessageBox(gameid == ffi::ox_idwin ? (currentPlayer == &p1 ? "P1(Com) wins" : "P2(You) win") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
         }
     default:
         break;
@@ -57,7 +57,7 @@ int TTT_pve_Frame::__OnButton__(TTTButtom* selectedButton)
 
 void TTT_pve_Frame::__ComTurn__()
 {
-    const auto select = Ai::ai(&game, &p2, &p1);
+    const auto select = Ai::ai(game, p2, p1);
 
     TTTButtom* selectedButton = std::find_if(mapButton.begin(), mapButton.end(),
         [select](const auto& buttonPair) {
@@ -65,7 +65,7 @@ void TTT_pve_Frame::__ComTurn__()
         })->second;
 
     const auto gameid = __OnButton__(selectedButton);
-    if (gameid == ox_idwin || gameid == ox_iddraw) {
+    if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
         wxCommandEvent event;
         OnP2First(event);
         return;
@@ -81,7 +81,7 @@ void TTT_pve_Frame::OnButton(wxCommandEvent& event)
     TTTButtom* selectedButton = mapButton.at(event.GetId());
 
     const auto gameid = __OnButton__(selectedButton);
-    if (gameid == ox_idwin || gameid == ox_iddraw) {
+    if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
         OnP1First(event);
         return;
     }
