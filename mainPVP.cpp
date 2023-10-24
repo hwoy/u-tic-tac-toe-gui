@@ -22,7 +22,7 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
     TTTButtom* selectedButton = mapButton.at(event.GetId());
 
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    switch (const auto gameid = game.gameplay(rival, currentPlayer, selectedButton->val)) {
+    switch (const auto gameid = game.gameplay(*rival, *currentPlayer, selectedButton->val)) {
     case ffi::ox_idoutofrange:
     case ffi::ox_idvalueexist:
         return;

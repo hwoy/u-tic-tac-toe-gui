@@ -38,7 +38,7 @@ void TTT_pve_Frame::OnP1First(wxCommandEvent& event)
 int TTT_pve_Frame::__OnButton__(TTTButtom* selectedButton)
 {
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    const auto gameid = game.gameplay(rival, currentPlayer, selectedButton->val);
+    const auto gameid = game.gameplay(*rival, *currentPlayer, selectedButton->val);
     switch (gameid) {
     case ffi::ox_idgame:
     case ffi::ox_idwin:

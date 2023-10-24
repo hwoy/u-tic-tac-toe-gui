@@ -38,7 +38,7 @@ struct Player : public ffi::ox_player {
 struct Game : public ffi::ox_game {
     Game(
         unsigned int seed = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count());
-    inline ffi::ox_gameid gameplay(const ffi::ox_player* p1, ffi::ox_player* p2, unsigned int val) const;
+    inline ffi::ox_gameid gameplay(const Player& p1, Player& p2, unsigned int val) const;
 };
 
 static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
@@ -114,9 +114,9 @@ Game::Game(unsigned int seed)
 {
 }
 
-inline ffi::ox_gameid Game::gameplay(const ffi::ox_player* p1, ffi::ox_player* p2, unsigned int val) const
+inline ffi::ox_gameid Game::gameplay(const Player& p1, Player& p2, unsigned int val) const
 {
-    return ffi::ox_gameplay(this, p1, p2, val);
+    return ffi::ox_gameplay(this, &p1, &p2, val);
 }
 
 inline int Ai::ai(Game& game, const Player& p1, const Player& p2)
@@ -251,7 +251,7 @@ void TTTFrame::OnP2First(wxCommandEvent& event)
 void TTTFrame::OnHint(wxCommandEvent& event)
 {
     auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    const auto pHint = ffi::ox_ai(&game, rival, currentPlayer);
+    const auto pHint = Ai::ai(game, *rival, *currentPlayer);
 
     TTTButtom* hintButton = std::find_if(mapButton.begin(), mapButton.end(),
         [pHint](const auto& buttonPair) {

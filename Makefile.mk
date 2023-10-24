@@ -1,5 +1,5 @@
 ###### Editable variables########
-
+BIN_DIR = bin$(BITS)
 
 WX_SETUP_H_INCLUDE_DIR = $(WX_LIB_DIR)/mswu
 WX_LIBS = -lwxmsw32u_core -lwxbase32u # -lwxpng -lwxzlib
@@ -33,32 +33,34 @@ CXXFLAGS = -O2 -std=c++14 -pedantic -Wall -I$(WX_INCLUDE_DIR) -I$(WX_SETUP_H_INC
 LDFLAGS = $(PLATFORM_LDFLAGS) -L$(WX_LIB_DIR)
 
 BIN_NAME = u3t-gui
-BIN_PVP = $(BIN_DIR)/$(BIN_NAME)_pvp.exe
-BIN_PVE = $(BIN_DIR)/$(BIN_NAME)_pve.exe
+BIN_PVP = $(BIN_DIR)/$(BIN_NAME)_pvp$(BITS).exe
+BIN_PVE = $(BIN_DIR)/$(BIN_NAME)_pve$(BITS).exe
 
 .PHONY: all strip clean distclean
 
 all: $(BIN_PVP) $(BIN_PVE)
 
-$(BIN_PVP):	mainPVP.o ttt_engine.o glibcrng.o
-	$(CXX) -o $(BIN_PVP) mainPVP.o ttt_engine.o glibcrng.o $(LDFLAGS) $(WX_LIBS) $(PLATFORM_LIBS)
+$(BIN_PVP):	mainPVP$(BITS).o ttt_engine$(BITS).o glibcrng$(BITS).o
+	$(CXX) -o $(BIN_PVP) mainPVP$(BITS).o ttt_engine$(BITS).o glibcrng$(BITS).o $(LDFLAGS) $(WX_LIBS) $(PLATFORM_LIBS)
 	
 
-$(BIN_PVE):	mainPVE.o ttt_engine.o glibcrng.o
-	$(CXX) -o $(BIN_PVE) mainPVE.o ttt_engine.o glibcrng.o $(LDFLAGS) $(WX_LIBS) $(PLATFORM_LIBS)
+$(BIN_PVE):	mainPVE$(BITS).o ttt_engine$(BITS).o glibcrng$(BITS).o
+	$(CXX) -o $(BIN_PVE) mainPVE$(BITS).o ttt_engine$(BITS).o glibcrng$(BITS).o $(LDFLAGS) $(WX_LIBS) $(PLATFORM_LIBS)
 
 
-mainPVP.o:	mainPVP.cpp
+mainPVP$(BITS).o:	mainPVP.cpp
+	$(CXX) -o mainPVP$(BITS).o $(CXXFLAGS) -c mainPVP.cpp
 
-mainPVE.o:	mainPVE.cpp
-
-
-ttt_engine.o:	$(TTT_DIR)/ttt_engine.c
-	$(CC) -o ttt_engine.o $(CFLAGS) -c $(TTT_DIR)/ttt_engine.c
+mainPVE$(BITS).o:	mainPVE.cpp
+	$(CXX) -o mainPVE$(BITS).o $(CXXFLAGS) -c mainPVE.cpp
 
 
-glibcrng.o:	$(TTT_DIR)/glibcrng.c
-	$(CC) -o glibcrng.o $(CFLAGS) -c $(TTT_DIR)/glibcrng.c
+ttt_engine$(BITS).o:	$(TTT_DIR)/ttt_engine.c
+	$(CC) -o ttt_engine$(BITS).o $(CFLAGS) -c $(TTT_DIR)/ttt_engine.c
+
+
+glibcrng$(BITS).o:	$(TTT_DIR)/glibcrng.c
+	$(CC) -o glibcrng$(BITS).o $(CFLAGS) -c $(TTT_DIR)/glibcrng.c
 
 strip:	
 	$(STRIP) -s $(BIN_PVP) $(BIN_PVE)

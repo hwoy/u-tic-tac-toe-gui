@@ -2,7 +2,7 @@
 
 WX_INCLUDE_DIR = C:\wx32\include
 WX_LIB_DIR = C:\wx32\lib\clang_dll
-BIN_DIR = bin32
+BITS = 32
 
 include Makefile.mk
 
