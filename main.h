@@ -9,10 +9,11 @@ extern "C" {
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <type_traits>
-#include <functional>
 
 #ifndef DBUTTONCOLOR
 #define DBUTTONCOLOR wxColor(100, 100, 100)
@@ -38,13 +39,11 @@ struct Player : public ffi::ox_player {
 
 struct Game : public ffi::ox_game {
     Game(
-        unsigned int seed = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count());
+        unsigned int _seed = seed());
     inline ffi::ox_gameid gameplay(const Player& p1, Player& p2, unsigned int val) const;
-};
 
-static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
-static_assert(std::is_standard_layout<Game>(), "struct Game is not a standard layout");
-static_assert(sizeof(Game) == sizeof(ffi::ox_game), "Game != ffi::ox_game");
+    static unsigned int seed();
+};
 
 struct Ai {
     inline static int ai(Game& game, const Player& p1, const Player& p2);
@@ -62,6 +61,13 @@ class TTTFrame : public wxFrame {
 public:
     TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 
+    TTTFrame() = delete;
+    TTTFrame(const TTTFrame&) = delete;
+    TTTFrame(TTTFrame&&) = delete;
+
+    TTTFrame& operator=(const TTTFrame&) = delete;
+    TTTFrame& operator=(TTTFrame&&) = delete;
+
 protected:
     virtual void OnNewGame(wxCommandEvent& event);
     virtual void OnP1First(wxCommandEvent& event);
@@ -71,7 +77,7 @@ protected:
     void OnAbout(wxCommandEvent& event);
     virtual void OnButton(wxCommandEvent& event) = 0;
 
-    Player* newgame(Player* wf);
+    Player& newgame(std::optional<std::reference_wrapper<Player>> wf);
 
     wxSize sqSize() const;
     wxSize sqindexSize() const;
@@ -79,7 +85,7 @@ protected:
     Game game;
     Player p1;
     Player p2;
-    Player* currentPlayer;
+    std::reference_wrapper<Player> currentPlayer;
 
     wxPanel* panel;
     const buttonMap_t mapButton;
@@ -87,6 +93,7 @@ protected:
 
     wxDECLARE_EVENT_TABLE();
 };
+
 enum {
     ID_BUTTON0 = 0,
     ID_BUTTON1 = ID_BUTTON0 + 1,
@@ -115,6 +122,11 @@ Game::Game(unsigned int seed)
 {
 }
 
+unsigned int Game::seed()
+{
+    return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+}
+
 inline ffi::ox_gameid Game::gameplay(const Player& p1, Player& p2, unsigned int val) const
 {
     return ffi::ox_gameplay(this, &p1, &p2, val);
@@ -136,6 +148,7 @@ TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size
     : wxFrame(NULL, wxID_ANY, title, pos, size, wxMINIMIZE_BOX | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN)
     , p1(P1COLOR)
     , p2(P2COLOR)
+    , currentPlayer(p1)
     , panel(new wxPanel(this, -1))
     , mapButton({ { ID_BUTTON0, new TTTButtom(panel, ID_BUTTON0, sqSize(), 0) },
           { ID_BUTTON1, new TTTButtom(panel, ID_BUTTON1, sqSize(), 1) },
@@ -190,7 +203,7 @@ TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size
     hbox_S->Add(new wxPanel(panel, -1));
 
     indexButton.get().Disable();
-    hbox_N->Add(std::addressof(indexButton.get()));
+    hbox_N->Add(&indexButton.get());
     vbox->Add(hbox_N, 0, wxALIGN_CENTER, 0);
 
     hbox1->Add(mapButton.at(ID_BUTTON0));
@@ -212,7 +225,7 @@ TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size
     panel->SetSizer(vbox);
 }
 
-Player* TTTFrame::newgame(Player* wf)
+Player& TTTFrame::newgame(std::optional<std::reference_wrapper<Player>> wf)
 {
     for (const auto& buttonPair : mapButton) {
         buttonPair.second->SetBackgroundColour(buttonPair.second->defaultButtonColor);
@@ -221,49 +234,49 @@ Player* TTTFrame::newgame(Player* wf)
 
     ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
 
-    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? &p1 : &p2) : wf;
-    indexButton.get().SetBackgroundColour(currentPlayer->color);
+    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? p1 : p2) : wf->get();
+    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
 
     return currentPlayer;
 }
 
-void TTTFrame::OnExit(wxCommandEvent& event)
+void TTTFrame::OnExit(wxCommandEvent&)
 {
     Close(true);
 }
-void TTTFrame::OnAbout(wxCommandEvent& event)
+void TTTFrame::OnAbout(wxCommandEvent&)
 {
     wxMessageBox("This is an unbeatable Tic-Tac-Toe Game.\n\nContact me:\n\nE-mail:bosskillerz@gmail.com\nFaceBook:dead-root\nGitHub:github.com/hwoy", "About u-Tic-Tac-Toe", wxOK | wxICON_INFORMATION);
 }
-void TTTFrame::OnNewGame(wxCommandEvent& event)
+void TTTFrame::OnNewGame(wxCommandEvent&)
 {
-    newgame(nullptr);
+    newgame(std::nullopt);
 }
 
-void TTTFrame::OnP1First(wxCommandEvent& event)
+void TTTFrame::OnP1First(wxCommandEvent&)
 {
-    newgame(&p1);
+    newgame(p1);
 }
-void TTTFrame::OnP2First(wxCommandEvent& event)
+void TTTFrame::OnP2First(wxCommandEvent&)
 {
-    newgame(&p2);
+    newgame(p2);
 }
 
-void TTTFrame::OnHint(wxCommandEvent& event)
+void TTTFrame::OnHint(wxCommandEvent&)
 {
-    auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    const auto pHint = Ai::ai(game, *rival, *currentPlayer);
+    const auto& rival = &currentPlayer.get() == &p1 ? p2 : p1;
+    const auto pHint = Ai::ai(game, rival, currentPlayer.get());
 
-    TTTButtom* hintButton = std::find_if(mapButton.begin(), mapButton.end(),
+    TTTButtom& hintButton = *std::find_if(mapButton.begin(), mapButton.end(),
         [pHint](const auto& buttonPair) {
             return buttonPair.second->val == pHint;
         })->second;
 
-    hintButton->SetBackgroundColour(currentPlayer->color);
+    hintButton.SetBackgroundColour(currentPlayer.get().color);
 
     wxMessageBox(("\n\nHint: " + std::to_string(pHint)).c_str(), "Hint a best move", wxOK | wxICON_INFORMATION);
 
-    hintButton->SetBackgroundColour(hintButton->defaultButtonColor);
+    hintButton.SetBackgroundColour(hintButton.defaultButtonColor);
 }
 wxSize TTTFrame::sqSize() const
 {
@@ -296,6 +309,13 @@ bool TTTApp<F>::OnInit()
     return true;
 }
 
+template <typename T>
+constexpr bool SELF_REFERENCE_TEST()
+{
+    return !(std::is_copy_constructible<T>() || std::is_move_constructible<T>()
+        || std::is_copy_assignable<T>() || std::is_move_assignable<T>());
+}
+
 wxBEGIN_EVENT_TABLE(TTTFrame, wxFrame)
 
     EVT_MENU(ID_NEWGAME, TTTFrame::OnNewGame)
@@ -318,5 +338,12 @@ wxBEGIN_EVENT_TABLE(TTTFrame, wxFrame)
                                                             EVT_BUTTON(ID_BUTTON8, TTTFrame::OnButton)
 
                                                                 wxEND_EVENT_TABLE()
+
+    /* =================  TEST ================= */
+    static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
+static_assert(std::is_standard_layout<Game>(), "struct Game is not a standard layout");
+static_assert(sizeof(Game) == sizeof(ffi::ox_game), "Game != ffi::ox_game");
+
+static_assert(SELF_REFERENCE_TEST<TTTFrame>(), "TTTFrame is not compatible with self reference");
 
 #endif

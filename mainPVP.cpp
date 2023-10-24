@@ -8,31 +8,39 @@
 class TTT_pvp_Frame : public TTTFrame {
 public:
     TTT_pvp_Frame();
+
+    TTT_pvp_Frame(const TTT_pvp_Frame&) = delete;
+    TTT_pvp_Frame(TTT_pvp_Frame&&) = delete;
+
+    TTT_pvp_Frame& operator=(const TTT_pvp_Frame&) = delete;
+    TTT_pvp_Frame& operator=(TTT_pvp_Frame&&) = delete;
+
     virtual void OnButton(wxCommandEvent& event) override;
 };
 
 TTT_pvp_Frame::TTT_pvp_Frame()
     : TTTFrame("u-Tic-Tac-Toe PVP", wxPoint(0, 0), wxGetDisplaySize())
 {
-    newgame(nullptr);
+    wxCommandEvent event;
+    OnNewGame(event);
 }
 
 void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
 {
-    TTTButtom* selectedButton = mapButton.at(event.GetId());
+    TTTButtom& selectedButton = *mapButton.at(event.GetId());
 
-    auto* rival = (currentPlayer == &p1) ? &p2 : &p1;
-    switch (const auto gameid = game.gameplay(*rival, *currentPlayer, selectedButton->val)) {
+    auto& rival = &currentPlayer.get() == &p1 ? p2 : p1;
+    switch (const auto gameid = game.gameplay(rival, currentPlayer.get(), selectedButton.val)) {
     case ffi::ox_idoutofrange:
     case ffi::ox_idvalueexist:
         return;
     case ffi::ox_idgame:
     case ffi::ox_idwin:
     case ffi::ox_iddraw:
-        selectedButton->SetBackgroundColour(currentPlayer->color);
-        selectedButton->Disable();
+        selectedButton.SetBackgroundColour(currentPlayer.get().color);
+        selectedButton.Disable();
         if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
-            wxMessageBox(gameid == ffi::ox_idwin ? (currentPlayer == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+            wxMessageBox(gameid == ffi::ox_idwin ? (&currentPlayer.get() == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
             newgame(rival);
             return;
         }
@@ -41,7 +49,10 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
     }
 
     currentPlayer = rival;
-    indexButton.get().SetBackgroundColour(currentPlayer->color);
+    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
 }
 
 wxIMPLEMENT_APP(TTTApp<TTT_pvp_Frame>);
+
+/* =================  TEST ================= */
+static_assert(SELF_REFERENCE_TEST<TTT_pvp_Frame>(), "TTT_pvp_Frame is not compatible with self reference");
