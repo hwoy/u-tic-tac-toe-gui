@@ -24,16 +24,16 @@ public:
     virtual void OnButton(wxCommandEvent& event) override;
 };
 
-void TTT_pve_Frame::OnNewGame(wxCommandEvent& event)
-{
-    ffi::ox_random(&game, 0, 1) ? OnP1First(event) : OnP2First(event);
-}
-
 TTT_pve_Frame::TTT_pve_Frame()
-    : TTTFrame("u-Tic-Tac-Toe PVE", wxPoint(0, 0), wxGetDisplaySize())
+    : TTTFrame("u-Tic-Tac-Toe PVE")
 {
     wxCommandEvent event;
     OnNewGame(event);
+}
+
+void TTT_pve_Frame::OnNewGame(wxCommandEvent& event)
+{
+    ffi::ox_random(&game, 0, 1) ? OnP1First(event) : OnP2First(event);
 }
 
 void TTT_pve_Frame::OnP1First(wxCommandEvent& event)

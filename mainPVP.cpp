@@ -19,7 +19,7 @@ public:
 };
 
 TTT_pvp_Frame::TTT_pvp_Frame()
-    : TTTFrame("u-Tic-Tac-Toe PVP", wxPoint(0, 0), wxGetDisplaySize())
+    : TTTFrame("u-Tic-Tac-Toe PVP")
 {
     wxCommandEvent event;
     OnNewGame(event);

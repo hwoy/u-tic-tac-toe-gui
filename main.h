@@ -39,7 +39,7 @@ struct Player : public ffi::ox_player {
 
 struct Game : public ffi::ox_game {
     Game(
-        unsigned int _seed = seed());
+        unsigned int seed);
     inline ffi::ox_gameid gameplay(const Player& p1, Player& p2, unsigned int val) const;
 
     static unsigned int seed();
@@ -59,7 +59,7 @@ public:
 
 class TTTFrame : public wxFrame {
 public:
-    TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+    TTTFrame(const wxString& title, unsigned int seed, const wxColor& p1color, const wxColor& p2olor, const wxPoint& pos, const wxSize& size);
 
     TTTFrame() = delete;
     TTTFrame(const TTTFrame&) = delete;
@@ -144,10 +144,11 @@ inline TTTButtom::TTTButtom(wxWindow* parent, wxWindowID id, const wxSize& size,
 {
 }
 
-TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
+TTTFrame::TTTFrame(const wxString& title, unsigned int seed = Game::seed(), const wxColor& p1color = P1COLOR, const wxColor& p2color = P2COLOR, const wxPoint& pos = wxPoint(0, 0), const wxSize& size = wxGetDisplaySize())
     : wxFrame(NULL, wxID_ANY, title, pos, size, wxMINIMIZE_BOX | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN)
-    , p1(P1COLOR)
-    , p2(P2COLOR)
+    , game(seed)
+    , p1(p1color)
+    , p2(p2color)
     , currentPlayer(p1)
     , panel(new wxPanel(this, -1))
     , mapButton({ { ID_BUTTON0, new TTTButtom(panel, ID_BUTTON0, sqSize(), 0) },
@@ -340,6 +341,7 @@ wxBEGIN_EVENT_TABLE(TTTFrame, wxFrame)
                                                                 wxEND_EVENT_TABLE()
 
     /* =================  TEST ================= */
+
     static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
 static_assert(std::is_standard_layout<Game>(), "struct Game is not a standard layout");
 static_assert(sizeof(Game) == sizeof(ffi::ox_game), "Game != ffi::ox_game");
