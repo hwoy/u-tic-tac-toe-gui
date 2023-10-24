@@ -41,7 +41,7 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
     }
 
     currentPlayer = rival;
-    indexButton->SetBackgroundColour(currentPlayer->color);
+    indexButton.get().SetBackgroundColour(currentPlayer->color);
 }
 
 wxIMPLEMENT_APP(TTTApp<TTT_pvp_Frame>);

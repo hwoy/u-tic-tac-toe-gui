@@ -12,6 +12,7 @@ extern "C" {
 #include <map>
 #include <string>
 #include <type_traits>
+#include <functional>
 
 #ifndef DBUTTONCOLOR
 #define DBUTTONCOLOR wxColor(100, 100, 100)
@@ -82,7 +83,7 @@ protected:
 
     wxPanel* panel;
     const buttonMap_t mapButton;
-    wxButton* indexButton;
+    std::reference_wrapper<wxButton> indexButton;
 
     wxDECLARE_EVENT_TABLE();
 };
@@ -147,7 +148,7 @@ TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size
           { ID_BUTTON6, new TTTButtom(panel, ID_BUTTON6, sqSize(), 6) },
           { ID_BUTTON7, new TTTButtom(panel, ID_BUTTON7, sqSize(), 7) },
           { ID_BUTTON8, new TTTButtom(panel, ID_BUTTON8, sqSize(), 8) } })
-    , indexButton(new wxButton(panel, wxID_ANY, "", wxPoint(0, 0), sqindexSize()))
+    , indexButton(*(new wxButton(panel, wxID_ANY, "", wxPoint(0, 0), sqindexSize())))
 {
     wxMenu* menuGame = new wxMenu;
     menuGame->Append(ID_NEWGAME, "&New Game...\tCtrl-N", "Start a new game");
@@ -188,8 +189,8 @@ TTTFrame::TTTFrame(const wxString& title, const wxPoint& pos, const wxSize& size
     hbox_N->Add(new wxPanel(panel, -1));
     hbox_S->Add(new wxPanel(panel, -1));
 
-    indexButton->Disable();
-    hbox_N->Add(indexButton);
+    indexButton.get().Disable();
+    hbox_N->Add(std::addressof(indexButton.get()));
     vbox->Add(hbox_N, 0, wxALIGN_CENTER, 0);
 
     hbox1->Add(mapButton.at(ID_BUTTON0));
@@ -221,7 +222,7 @@ Player* TTTFrame::newgame(Player* wf)
     ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
 
     currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? &p1 : &p2) : wf;
-    indexButton->SetBackgroundColour(currentPlayer->color);
+    indexButton.get().SetBackgroundColour(currentPlayer->color);
 
     return currentPlayer;
 }

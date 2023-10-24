@@ -72,7 +72,7 @@ void TTT_pve_Frame::__ComTurn__()
     }
 
     currentPlayer = &p2;
-    indexButton->SetBackgroundColour(currentPlayer->color);
+    indexButton.get().SetBackgroundColour(currentPlayer->color);
 }
 
 void TTT_pve_Frame::OnButton(wxCommandEvent& event)
@@ -87,7 +87,7 @@ void TTT_pve_Frame::OnButton(wxCommandEvent& event)
     }
 
     currentPlayer = &p1;
-    indexButton->SetBackgroundColour(currentPlayer->color);
+    indexButton.get().SetBackgroundColour(currentPlayer->color);
 
     __ComTurn__();
 }
