@@ -8,12 +8,18 @@ extern "C" {
 }
 
 #include <algorithm>
-#include <chrono>
 #include <functional>
 #include <map>
+
+#if __cplusplus >= 201703L
 #include <optional>
+#endif
+
+#include <random>
 #include <string>
 #include <type_traits>
+
+#include <wx/wx.h>
 
 #ifndef DBUTTONCOLOR
 #define DBUTTONCOLOR wxColor(100, 100, 100)
@@ -77,7 +83,11 @@ protected:
     void OnAbout(wxCommandEvent& event);
     virtual void OnButton(wxCommandEvent& event) = 0;
 
+#if __cplusplus >= 201703L
     Player& newgame(std::optional<std::reference_wrapper<Player>> wf);
+#else
+    Player& newgame(Player* wf);
+#endif
 
     wxSize sqSize() const;
     wxSize sqindexSize() const;
@@ -124,7 +134,7 @@ Game::Game(unsigned int seed)
 
 unsigned int Game::seed()
 {
-    return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+    return std::random_device {}();
 }
 
 inline ffi::ox_gameid Game::gameplay(const Player& p1, Player& p2, unsigned int val) const
@@ -226,7 +236,14 @@ TTTFrame::TTTFrame(const wxString& title, unsigned int seed = Game::seed(), cons
     panel->SetSizer(vbox);
 }
 
-Player& TTTFrame::newgame(std::optional<std::reference_wrapper<Player>> wf)
+Player& TTTFrame::newgame(
+#if __cplusplus >= 201703L
+    std::optional<std::reference_wrapper<Player>>
+        wf
+#else
+    Player* wf
+#endif
+)
 {
     for (const auto& buttonPair : mapButton) {
         buttonPair.second->SetBackgroundColour(buttonPair.second->defaultButtonColor);
@@ -235,7 +252,13 @@ Player& TTTFrame::newgame(std::optional<std::reference_wrapper<Player>> wf)
 
     ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
 
-    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? p1 : p2) : wf->get();
+    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? p1 : p2) :
+#if __cplusplus >= 201703L
+                          wf->get();
+#else
+                          *wf;
+#endif
+
     indexButton.get().SetBackgroundColour(currentPlayer.get().color);
 
     return currentPlayer;
@@ -251,16 +274,34 @@ void TTTFrame::OnAbout(wxCommandEvent&)
 }
 void TTTFrame::OnNewGame(wxCommandEvent&)
 {
-    newgame(std::nullopt);
+    newgame(
+#if __cplusplus >= 201703L
+        std::nullopt
+#else
+        nullptr
+#endif
+    );
 }
 
 void TTTFrame::OnP1First(wxCommandEvent&)
 {
-    newgame(p1);
+    newgame(
+#if __cplusplus >= 201703L
+        p1
+#else
+        &p1
+#endif
+    );
 }
 void TTTFrame::OnP2First(wxCommandEvent&)
 {
-    newgame(p2);
+    newgame(
+#if __cplusplus >= 201703L
+        p2
+#else
+        &p2
+#endif
+    );
 }
 
 void TTTFrame::OnHint(wxCommandEvent&)
@@ -269,7 +310,15 @@ void TTTFrame::OnHint(wxCommandEvent&)
     const auto pHint = Ai::ai(game, rival, currentPlayer.get());
 
     TTTButtom& hintButton = *std::find_if(mapButton.begin(), mapButton.end(),
-        [pHint](const auto& buttonPair) {
+        [pHint](const
+
+#if __cplusplus >= 201402L
+            auto
+#else
+            std::pair<const int, TTTButtom*>
+#endif
+
+                & buttonPair) {
             return buttonPair.second->val == pHint;
         })->second;
 

@@ -1,8 +1,3 @@
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-#include <wx/wx.h>
-#endif
-
 #include "main.h"
 
 class TTT_pve_Frame : public TTTFrame {
@@ -67,7 +62,15 @@ void TTT_pve_Frame::__ComTurn__()
     const auto select = Ai::ai(game, p2, p1);
 
     TTTButtom& selectedButton = *std::find_if(mapButton.begin(), mapButton.end(),
-        [select](const auto& buttonPair) {
+        [select](const
+
+#if __cplusplus >= 201402L
+            auto
+#else
+            std::pair<const int, TTTButtom*>
+#endif
+
+                & buttonPair) {
             return buttonPair.second->val == select;
         })->second;
 

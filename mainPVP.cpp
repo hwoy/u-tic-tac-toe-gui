@@ -1,8 +1,3 @@
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-#include <wx/wx.h>
-#endif
-
 #include "main.h"
 
 class TTT_pvp_Frame : public TTTFrame {
@@ -41,7 +36,11 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
         selectedButton.Disable();
         if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
             wxMessageBox(gameid == ffi::ox_idwin ? (&currentPlayer.get() == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+#if __cplusplus >= 201703L
             newgame(rival);
+#else
+            newgame(&rival);
+#endif
             return;
         }
     default:
