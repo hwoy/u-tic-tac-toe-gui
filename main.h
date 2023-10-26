@@ -344,7 +344,6 @@ wxSize TTTFrame::sqindexSize() const
 
 template <typename F>
 class TTTApp : public wxApp {
-    F frame;
 
 public:
     virtual bool OnInit() override;
@@ -353,6 +352,7 @@ public:
 template <typename F>
 bool TTTApp<F>::OnInit()
 {
+    F& frame = *(new F());
     if (!frame.IsMaximized())
         frame.Maximize(true);
     frame.Show(true);
