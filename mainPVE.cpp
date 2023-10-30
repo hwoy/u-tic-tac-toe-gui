@@ -8,8 +8,6 @@ protected:
 public:
     TTT_pve_Frame();
 
-    PINNED(TTT_pve_Frame);
-
     virtual void OnNewGame(wxCommandEvent& event) override;
     virtual void OnP1First(wxCommandEvent& event) override;
     virtual void OnButton(wxCommandEvent& event) override;
@@ -35,16 +33,16 @@ void TTT_pve_Frame::OnP1First(wxCommandEvent& event)
 
 ffi::ox_gameid TTT_pve_Frame::__OnButton__(TTTButtom& selectedButton)
 {
-    auto& rival = &currentPlayer.get() == &p1 ? p2 : p1;
-    const auto gameid = game.gameplay(rival, currentPlayer.get(), selectedButton.val);
+    const auto rivalindex = playerindex == PlayerIndex::p1 ? PlayerIndex::p2 : PlayerIndex::p1;
+    const auto gameid = game.gameplay(player[rivalindex], player[playerindex], selectedButton.val);
     switch (gameid) {
     case ffi::ox_idgame:
     case ffi::ox_idwin:
     case ffi::ox_iddraw:
-        selectedButton.SetBackgroundColour(currentPlayer.get().color);
+        selectedButton.SetBackgroundColour(player[playerindex].color);
         selectedButton.Disable();
         if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
-            wxMessageBox(gameid == ffi::ox_idwin ? (&currentPlayer.get() == &p1 ? "P1(Com) wins" : "P2(You) win") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+            wxMessageBox(gameid == ffi::ox_idwin ? (playerindex == PlayerIndex::p1 ? "P1(Com) wins" : "P2(You) win") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
         }
     default:
         break;
@@ -55,7 +53,7 @@ ffi::ox_gameid TTT_pve_Frame::__OnButton__(TTTButtom& selectedButton)
 
 void TTT_pve_Frame::__ComTurn__()
 {
-    const auto select = Ai::ai(game, p2, p1);
+    const auto select = Ai::ai(game, player[PlayerIndex::p2], player[PlayerIndex::p1]);
 
     TTTButtom& selectedButton = *std::find_if(mapButton.begin(), mapButton.end(),
         [select](const
@@ -77,8 +75,8 @@ void TTT_pve_Frame::__ComTurn__()
         return;
     }
 
-    currentPlayer = p2;
-    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
+    playerindex = PlayerIndex::p2;
+    indexButton.get().SetBackgroundColour(player[playerindex].color);
 }
 
 void TTT_pve_Frame::OnButton(wxCommandEvent& event)
@@ -92,13 +90,10 @@ void TTT_pve_Frame::OnButton(wxCommandEvent& event)
         return;
     }
 
-    currentPlayer = p1;
-    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
+    playerindex = PlayerIndex::p1;
+    indexButton.get().SetBackgroundColour(player[playerindex].color);
 
     __ComTurn__();
 }
 
 wxIMPLEMENT_APP(TTTApp<TTT_pve_Frame>);
-
-/* =================  TEST ================= */
-static_assert(SELF_REFERENCE_TEST<TTT_pve_Frame>(), "TTT_pve_Frame is not compatible with self reference");

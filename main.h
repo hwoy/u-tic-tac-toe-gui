@@ -11,10 +11,6 @@ extern "C" {
 #include <functional>
 #include <map>
 
-#if __cplusplus >= 201703L
-#include <optional>
-#endif
-
 #include <random>
 #include <string>
 #include <type_traits>
@@ -33,14 +29,32 @@ extern "C" {
 #define P2COLOR wxColor(0, 0, 100)
 #endif
 
-#define PINNED(TYPE)                       \
-    TYPE(const TYPE&) = delete;            \
-    TYPE(TYPE&&) = delete;                 \
-    TYPE& operator=(const TYPE&) = delete; \
-    TYPE& operator=(TYPE&&) = delete;
-
 class TTTButtom;
 class TTTFrame;
+
+enum PlayerIndex : std::size_t {
+    p1 = 0,
+    com = p1,
+    p2,
+    you = p2,
+    none
+};
+
+enum GUI : int {
+    ID_BUTTON0 = 0,
+    ID_BUTTON1,
+    ID_BUTTON2,
+    ID_BUTTON3,
+    ID_BUTTON4,
+    ID_BUTTON5,
+    ID_BUTTON6,
+    ID_BUTTON7,
+    ID_BUTTON8,
+    ID_NEWGAME,
+    ID_P1,
+    ID_P2,
+    ID_HINT
+};
 
 using buttonMap_t = std::map<int, TTTButtom*>;
 
@@ -73,8 +87,6 @@ class TTTFrame : public wxFrame {
 public:
     TTTFrame(const wxString& title, unsigned int seed, const wxColor& p1color, const wxColor& p2olor, const wxPoint& pos, const wxSize& size);
 
-    PINNED(TTTFrame);
-
 protected:
     virtual void OnNewGame(wxCommandEvent& event);
     virtual void OnP1First(wxCommandEvent& event);
@@ -84,19 +96,14 @@ protected:
     void OnAbout(wxCommandEvent& event);
     virtual void OnButton(wxCommandEvent& event) = 0;
 
-#if __cplusplus >= 201703L
-    Player& newgame(std::optional<std::reference_wrapper<Player>> wf);
-#else
-    Player& newgame(Player* wf);
-#endif
+    Player& newgame(PlayerIndex wf);
 
     wxSize sqSize() const;
     wxSize sqindexSize() const;
 
     Game game;
-    Player p1;
-    Player p2;
-    std::reference_wrapper<Player> currentPlayer;
+    Player player[2];
+    PlayerIndex playerindex;
 
     wxPanel* panel;
     const buttonMap_t mapButton;
@@ -105,23 +112,7 @@ protected:
     wxDECLARE_EVENT_TABLE();
 };
 
-enum {
-    ID_BUTTON0 = 0,
-    ID_BUTTON1 = ID_BUTTON0 + 1,
-    ID_BUTTON2 = ID_BUTTON0 + 2,
-    ID_BUTTON3 = ID_BUTTON0 + 3,
-    ID_BUTTON4 = ID_BUTTON0 + 4,
-    ID_BUTTON5 = ID_BUTTON0 + 5,
-    ID_BUTTON6 = ID_BUTTON0 + 6,
-    ID_BUTTON7 = ID_BUTTON0 + 7,
-    ID_BUTTON8 = ID_BUTTON0 + 8,
-    ID_NEWGAME = ID_BUTTON0 + 9,
-    ID_P1 = ID_BUTTON0 + 10,
-    ID_P2 = ID_BUTTON0 + 11,
-    ID_HINT = ID_BUTTON0 + 12
-};
-
-//// *******  BEGIN METHOD DEF ********** ////
+//// ******* BEGIN METHOD DEF ********** ////
 
 inline Player::Player(const wxColor& color)
     : color(color)
@@ -158,39 +149,38 @@ inline TTTButtom::TTTButtom(wxWindow* parent, wxWindowID id, const wxSize& size,
 TTTFrame::TTTFrame(const wxString& title, unsigned int seed = Game::seed(), const wxColor& p1color = P1COLOR, const wxColor& p2color = P2COLOR, const wxPoint& pos = wxPoint(0, 0), const wxSize& size = wxGetDisplaySize())
     : wxFrame(NULL, wxID_ANY, title, pos, size, wxMINIMIZE_BOX | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN)
     , game(seed)
-    , p1(p1color)
-    , p2(p2color)
-    , currentPlayer(p1)
+    , player { Player(p1color), Player(p2color) }
+    , playerindex(PlayerIndex::none)
     , panel(new wxPanel(this, -1))
-    , mapButton({ { ID_BUTTON0, new TTTButtom(panel, ID_BUTTON0, sqSize(), 0) },
-          { ID_BUTTON1, new TTTButtom(panel, ID_BUTTON1, sqSize(), 1) },
-          { ID_BUTTON2, new TTTButtom(panel, ID_BUTTON2, sqSize(), 2) },
+    , mapButton({ { GUI::ID_BUTTON0, new TTTButtom(panel, GUI::ID_BUTTON0, sqSize(), 0) },
+          { GUI::ID_BUTTON1, new TTTButtom(panel, GUI::ID_BUTTON1, sqSize(), 1) },
+          { GUI::ID_BUTTON2, new TTTButtom(panel, GUI::ID_BUTTON2, sqSize(), 2) },
 
-          { ID_BUTTON3, new TTTButtom(panel, ID_BUTTON3, sqSize(), 3) },
-          { ID_BUTTON4, new TTTButtom(panel, ID_BUTTON4, sqSize(), 4) },
-          { ID_BUTTON5, new TTTButtom(panel, ID_BUTTON5, sqSize(), 5) },
+          { GUI::ID_BUTTON3, new TTTButtom(panel, GUI::ID_BUTTON3, sqSize(), 3) },
+          { GUI::ID_BUTTON4, new TTTButtom(panel, GUI::ID_BUTTON4, sqSize(), 4) },
+          { GUI::ID_BUTTON5, new TTTButtom(panel, GUI::ID_BUTTON5, sqSize(), 5) },
 
-          { ID_BUTTON6, new TTTButtom(panel, ID_BUTTON6, sqSize(), 6) },
-          { ID_BUTTON7, new TTTButtom(panel, ID_BUTTON7, sqSize(), 7) },
-          { ID_BUTTON8, new TTTButtom(panel, ID_BUTTON8, sqSize(), 8) } })
+          { GUI::ID_BUTTON6, new TTTButtom(panel, GUI::ID_BUTTON6, sqSize(), 6) },
+          { GUI::ID_BUTTON7, new TTTButtom(panel, GUI::ID_BUTTON7, sqSize(), 7) },
+          { GUI::ID_BUTTON8, new TTTButtom(panel, GUI::ID_BUTTON8, sqSize(), 8) } })
     , indexButton(*(new wxButton(panel, wxID_ANY, "", wxPoint(0, 0), sqindexSize())))
 {
     wxMenu* menuGame = new wxMenu;
-    menuGame->Append(ID_NEWGAME, "&New Game...\tCtrl-N", "Start a new game");
+    menuGame->Append(GUI::ID_NEWGAME, "&New Game...\tCtrl-N", "Start a new game");
 
     menuGame->AppendSeparator();
     {
-        auto* menuItemP1 = new wxMenuItem(nullptr, ID_P1, "&P1 goes first...\tCtrl-C", "Start a new game and P1 goes first");
-        menuItemP1->SetTextColour(p1.color);
+        auto* menuItemP1 = new wxMenuItem(nullptr, GUI::ID_P1, "&P1 goes first...\tCtrl-C", "Start a new game and P1 goes first");
+        menuItemP1->SetTextColour(player[PlayerIndex::p1].color);
         menuGame->Append(menuItemP1);
 
-        auto* menuItemP2 = new wxMenuItem(nullptr, ID_P2, "&P2 goes first...\tCtrl-Y", "Start a new game and P2 goes first");
-        menuItemP2->SetTextColour(p2.color);
+        auto* menuItemP2 = new wxMenuItem(nullptr, GUI::ID_P2, "&P2 goes first...\tCtrl-Y", "Start a new game and P2 goes first");
+        menuItemP2->SetTextColour(player[PlayerIndex::p2].color);
         menuGame->Append(menuItemP2);
     }
 
     menuGame->AppendSeparator();
-    menuGame->Append(ID_HINT, "&Hint...\tCtrl-H", "Hint move");
+    menuGame->Append(GUI::ID_HINT, "&Hint...\tCtrl-H", "Hint move");
     menuGame->AppendSeparator();
     menuGame->Append(wxID_EXIT);
     wxMenu* menuHelp = new wxMenu;
@@ -218,15 +208,15 @@ TTTFrame::TTTFrame(const wxString& title, unsigned int seed = Game::seed(), cons
     hbox_N->Add(&indexButton.get());
     vbox->Add(hbox_N, 0, wxALIGN_CENTER, 0);
 
-    hbox1->Add(mapButton.at(ID_BUTTON0));
-    hbox1->Add(mapButton.at(ID_BUTTON1));
-    hbox1->Add(mapButton.at(ID_BUTTON2));
-    hbox2->Add(mapButton.at(ID_BUTTON3));
-    hbox2->Add(mapButton.at(ID_BUTTON4));
-    hbox2->Add(mapButton.at(ID_BUTTON5));
-    hbox3->Add(mapButton.at(ID_BUTTON6));
-    hbox3->Add(mapButton.at(ID_BUTTON7));
-    hbox3->Add(mapButton.at(ID_BUTTON8));
+    hbox1->Add(mapButton.at(GUI::ID_BUTTON0));
+    hbox1->Add(mapButton.at(GUI::ID_BUTTON1));
+    hbox1->Add(mapButton.at(GUI::ID_BUTTON2));
+    hbox2->Add(mapButton.at(GUI::ID_BUTTON3));
+    hbox2->Add(mapButton.at(GUI::ID_BUTTON4));
+    hbox2->Add(mapButton.at(GUI::ID_BUTTON5));
+    hbox3->Add(mapButton.at(GUI::ID_BUTTON6));
+    hbox3->Add(mapButton.at(GUI::ID_BUTTON7));
+    hbox3->Add(mapButton.at(GUI::ID_BUTTON8));
 
     vbox->Add(hbox1, 0, wxALIGN_CENTER, 0);
     vbox->Add(hbox2, 0, wxALIGN_CENTER, 0);
@@ -237,32 +227,20 @@ TTTFrame::TTTFrame(const wxString& title, unsigned int seed = Game::seed(), cons
     panel->SetSizer(vbox);
 }
 
-Player& TTTFrame::newgame(
-#if __cplusplus >= 201703L
-    std::optional<std::reference_wrapper<Player>>
-        wf
-#else
-    Player* wf
-#endif
-)
+Player& TTTFrame::newgame(PlayerIndex wf)
 {
     for (const auto& buttonPair : mapButton) {
         buttonPair.second->SetBackgroundColour(buttonPair.second->defaultButtonColor);
         buttonPair.second->Enable();
     }
 
-    ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &p1, &p2);
+    ffi::ox_init(&game, ffi::WINLIST, ffi::TRILIST, NWIN, NELEMENT, NTRI, NTRIELEMENT, &player[PlayerIndex::p1], &player[PlayerIndex::p2]);
 
-    currentPlayer = (!wf) ? (ffi::ox_random(&game, 0, 1) ? p1 : p2) :
-#if __cplusplus >= 201703L
-                          wf->get();
-#else
-                          *wf;
-#endif
+    playerindex = (wf == PlayerIndex::none) ? (ffi::ox_random(&game, 0, 1) ? PlayerIndex::p1 : PlayerIndex::p2) : wf;
 
-    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
+    indexButton.get().SetBackgroundColour(player[playerindex].color);
 
-    return currentPlayer;
+    return player[playerindex];
 }
 
 void TTTFrame::OnExit(wxCommandEvent&)
@@ -275,40 +253,22 @@ void TTTFrame::OnAbout(wxCommandEvent&)
 }
 void TTTFrame::OnNewGame(wxCommandEvent&)
 {
-    newgame(
-#if __cplusplus >= 201703L
-        std::nullopt
-#else
-        nullptr
-#endif
-    );
+    newgame(PlayerIndex::none);
 }
 
 void TTTFrame::OnP1First(wxCommandEvent&)
 {
-    newgame(
-#if __cplusplus >= 201703L
-        p1
-#else
-        &p1
-#endif
-    );
+    newgame(PlayerIndex::p1);
 }
 void TTTFrame::OnP2First(wxCommandEvent&)
 {
-    newgame(
-#if __cplusplus >= 201703L
-        p2
-#else
-        &p2
-#endif
-    );
+    newgame(PlayerIndex::p2);
 }
 
 void TTTFrame::OnHint(wxCommandEvent&)
 {
-    const auto& rival = &currentPlayer.get() == &p1 ? p2 : p1;
-    const auto pHint = Ai::ai(game, rival, currentPlayer.get());
+    const auto rivalindex = playerindex == PlayerIndex::p1 ? PlayerIndex::p2 : PlayerIndex::p1;
+    const auto pHint = Ai::ai(game, player[rivalindex], player[playerindex]);
 
     TTTButtom& hintButton = *std::find_if(mapButton.begin(), mapButton.end(),
         [pHint](const
@@ -323,7 +283,7 @@ void TTTFrame::OnHint(wxCommandEvent&)
             return buttonPair.second->val == pHint;
         })->second;
 
-    hintButton.SetBackgroundColour(currentPlayer.get().color);
+    hintButton.SetBackgroundColour(player[playerindex].color);
 
     wxMessageBox(("\n\nHint: " + std::to_string(pHint)).c_str(), "Hint a best move", wxOK | wxICON_INFORMATION);
 
@@ -360,13 +320,6 @@ bool TTTApp<F>::OnInit()
     return true;
 }
 
-template <typename T>
-constexpr bool SELF_REFERENCE_TEST()
-{
-    return !(std::is_copy_constructible<T>() || std::is_move_constructible<T>()
-        || std::is_copy_assignable<T>() || std::is_move_assignable<T>());
-}
-
 wxBEGIN_EVENT_TABLE(TTTFrame, wxFrame)
 
     EVT_MENU(ID_NEWGAME, TTTFrame::OnNewGame)
@@ -390,12 +343,10 @@ wxBEGIN_EVENT_TABLE(TTTFrame, wxFrame)
 
                                                                 wxEND_EVENT_TABLE()
 
-    /* =================  TEST ================= */
+    /* ================= TEST ================= */
 
     static_assert(std::is_trivially_constructible<ffi::ox_game>() && std::is_standard_layout<ffi::ox_game>(), "struct ffi::ox_game is not a trivially constructible struct && standard layout");
 static_assert(std::is_standard_layout<Game>(), "struct Game is not a standard layout");
 static_assert(sizeof(Game) == sizeof(ffi::ox_game), "Game != ffi::ox_game");
-
-static_assert(SELF_REFERENCE_TEST<TTTFrame>(), "TTTFrame is not compatible with self reference");
 
 #endif

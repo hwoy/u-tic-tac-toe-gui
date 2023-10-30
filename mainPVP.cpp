@@ -4,8 +4,6 @@ class TTT_pvp_Frame : public TTTFrame {
 public:
     TTT_pvp_Frame();
 
-    PINNED(TTT_pvp_Frame);
-
     virtual void OnButton(wxCommandEvent& event) override;
 };
 
@@ -20,34 +18,27 @@ void TTT_pvp_Frame::OnButton(wxCommandEvent& event)
 {
     TTTButtom& selectedButton = *mapButton.at(event.GetId());
 
-    auto& rival = &currentPlayer.get() == &p1 ? p2 : p1;
-    switch (const auto gameid = game.gameplay(rival, currentPlayer.get(), selectedButton.val)) {
+    const auto rivalindex = playerindex == PlayerIndex::p1 ? PlayerIndex::p2 : PlayerIndex::p1;
+    switch (const auto gameid = game.gameplay(player[rivalindex], player[playerindex], selectedButton.val)) {
     case ffi::ox_idoutofrange:
     case ffi::ox_idvalueexist:
         return;
     case ffi::ox_idgame:
     case ffi::ox_idwin:
     case ffi::ox_iddraw:
-        selectedButton.SetBackgroundColour(currentPlayer.get().color);
+        selectedButton.SetBackgroundColour(player[playerindex].color);
         selectedButton.Disable();
         if (gameid == ffi::ox_idwin || gameid == ffi::ox_iddraw) {
-            wxMessageBox(gameid == ffi::ox_idwin ? (&currentPlayer.get() == &p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
-#if __cplusplus >= 201703L
-            newgame(rival);
-#else
-            newgame(&rival);
-#endif
+            wxMessageBox(gameid == ffi::ox_idwin ? (playerindex == PlayerIndex::p1 ? "P1 wins" : "P2 wins") : "Draw!", "Game Over!", wxOK | wxICON_INFORMATION);
+            newgame(rivalindex);
             return;
         }
     default:
         break;
     }
 
-    currentPlayer = rival;
-    indexButton.get().SetBackgroundColour(currentPlayer.get().color);
+    playerindex = rivalindex;
+    indexButton.get().SetBackgroundColour(player[playerindex].color);
 }
 
 wxIMPLEMENT_APP(TTTApp<TTT_pvp_Frame>);
-
-/* =================  TEST ================= */
-static_assert(SELF_REFERENCE_TEST<TTT_pvp_Frame>(), "TTT_pvp_Frame is not compatible with self reference");
