@@ -55,7 +55,7 @@ ninja install
 
 git clone --recurse-submodules https://github.com/hwoy/u-tic-tac-toe-gui.git
 cd u-tic-tac-toe-gui
-make distclean 2>/dev/null
+make distclean
 make
 
 ```
@@ -66,7 +66,7 @@ make
 
 git clone --recurse-submodules https://github.com/hwoy/u-tic-tac-toe-gui.git
 cd u-tic-tac-toe-gui
-make -f Makefile.32 distclean 2>/dev/null
+make -f Makefile.32 distclean
 make -f Makefile.32
 
 ```

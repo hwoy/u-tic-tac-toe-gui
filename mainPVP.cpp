@@ -4,11 +4,7 @@ class TTT_pvp_Frame : public TTTFrame {
 public:
     TTT_pvp_Frame();
 
-    TTT_pvp_Frame(const TTT_pvp_Frame&) = delete;
-    TTT_pvp_Frame(TTT_pvp_Frame&&) = delete;
-
-    TTT_pvp_Frame& operator=(const TTT_pvp_Frame&) = delete;
-    TTT_pvp_Frame& operator=(TTT_pvp_Frame&&) = delete;
+    PINNED(TTT_pvp_Frame);
 
     virtual void OnButton(wxCommandEvent& event) override;
 };

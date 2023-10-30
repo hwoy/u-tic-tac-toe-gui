@@ -33,6 +33,12 @@ extern "C" {
 #define P2COLOR wxColor(0, 0, 100)
 #endif
 
+#define PINNED(TYPE)                       \
+    TYPE(const TYPE&) = delete;            \
+    TYPE(TYPE&&) = delete;                 \
+    TYPE& operator=(const TYPE&) = delete; \
+    TYPE& operator=(TYPE&&) = delete;
+
 class TTTButtom;
 class TTTFrame;
 
@@ -67,12 +73,7 @@ class TTTFrame : public wxFrame {
 public:
     TTTFrame(const wxString& title, unsigned int seed, const wxColor& p1color, const wxColor& p2olor, const wxPoint& pos, const wxSize& size);
 
-    TTTFrame() = delete;
-    TTTFrame(const TTTFrame&) = delete;
-    TTTFrame(TTTFrame&&) = delete;
-
-    TTTFrame& operator=(const TTTFrame&) = delete;
-    TTTFrame& operator=(TTTFrame&&) = delete;
+    PINNED(TTTFrame);
 
 protected:
     virtual void OnNewGame(wxCommandEvent& event);

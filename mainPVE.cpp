@@ -8,11 +8,7 @@ protected:
 public:
     TTT_pve_Frame();
 
-    TTT_pve_Frame(const TTT_pve_Frame&) = delete;
-    TTT_pve_Frame(TTT_pve_Frame&&) = delete;
-
-    TTT_pve_Frame& operator=(const TTT_pve_Frame&) = delete;
-    TTT_pve_Frame& operator=(TTT_pve_Frame&&) = delete;
+    PINNED(TTT_pve_Frame);
 
     virtual void OnNewGame(wxCommandEvent& event) override;
     virtual void OnP1First(wxCommandEvent& event) override;
